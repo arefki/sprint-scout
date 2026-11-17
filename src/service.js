@@ -16,6 +16,12 @@ import { createPage } from "./confluence.js";
 export const DEFAULT_STALE_DAYS = 3;
 export const DEFAULT_OVERLOAD_AT = 8;
 export const MAX_NUDGE_ISSUES = 5;
+// How many title variants createReviewPage tries before giving up: the base
+// title, then " (2)" … " (5)". Confluence titles must be unique per space,
+// and the default title is one-per-sprint-per-day, so a second draft on the
+// same day would otherwise always fail (verified 2026-11-17: six identical
+// 400 "already exists" failures in a row).
+export const MAX_REVIEW_TITLE_ATTEMPTS = 5;
 
 // Load the work to analyse: the active sprint's issues when there is one,
 // otherwise all open work in the project. Returns
@@ -74,12 +80,59 @@ export async function analyseSprint(projectKey, staleDays = DEFAULT_STALE_DAYS, 
   };
 }
 
+// The base title for a review page. A non-empty override (from the agent or
+// the dashboard) wins; otherwise the generated "Sprint review — <sprint> —
+// <UTC date>" title is used. Pure, so the title logic is unit-testable.
+export function buildReviewTitle(sprintName, titleOverride, now = new Date()) {
+  const override = typeof titleOverride === "string" ? titleOverride.trim() : "";
+  if (override) return override;
+  const today = now.toISOString().slice(0, 10);
+  return `Sprint review — ${sprintName} — ${today}`;
+}
+
+// True only for Confluence's duplicate-title 400: createPage wraps the API
+// error as "Could not create the Confluence page (400): {...\"A page with
+// this title already exists...\". Any other failure (403, 500, network)
+// must NOT be retried as a title collision.
+export function isDuplicateTitleError(e) {
+  const msg = String(e?.message || "");
+  return /\(400\)/.test(msg) && /already exists/i.test(msg);
+}
+
+// Create the review page, retrying with a numbered suffix when the title is
+// taken: "… — 2026-11-17", "… — 2026-11-17 (2)", "… — 2026-11-17 (3)" …,
+// up to MAX_REVIEW_TITLE_ATTEMPTS attempts. Returns the created page.
+// Throws the original error for non-duplicate failures, and a clear error
+// naming the collision when every variant is taken. `createPageFn` defaults
+// to the real Confluence call; tests inject a stub.
+export async function createReviewPage(spaceKey, baseTitle, html, createPageFn = createPage) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_REVIEW_TITLE_ATTEMPTS; attempt += 1) {
+    const title = attempt === 1 ? baseTitle : `${baseTitle} (${attempt})`;
+    try {
+      return await createPageFn(spaceKey, title, html);
+    } catch (e) {
+      lastError = e;
+      if (!isDuplicateTitleError(e)) throw e;
+      // Duplicate title: try the next numbered variant.
+    }
+  }
+  throw new Error(
+    `Could not create the review page: a page titled "${baseTitle}" already exists in space ${spaceKey} ` +
+      `and all ${MAX_REVIEW_TITLE_ATTEMPTS} title variants were taken. ${String(lastError?.message || "").slice(0, 120)}`,
+  );
+}
+
 // Build the review page body + title, then create it in Confluence.
-export async function draftSprintReview(projectKey, spaceKey) {
-  const analysis = await analyseSprint(projectKey);
+// `options.title` overrides the generated title (from the Rovo action's
+// `title` input or the dashboard). `options.createPageFn` /
+// `options.analyseFn` are test seams — production callers leave them out.
+export async function draftSprintReview(projectKey, spaceKey, options = {}) {
+  const analyseFn = options.analyseFn || analyseSprint;
+  const createPageFn = options.createPageFn || createPage;
+  const analysis = await analyseFn(projectKey);
   const sprintName = analysis.sprint?.name || `Open work in ${projectKey}`;
-  const today = new Date().toISOString().slice(0, 10);
-  const title = `Sprint review — ${sprintName} — ${today}`;
+  const title = buildReviewTitle(sprintName, options.title);
   const html = buildReviewHtml({
     sprint: analysis.sprint,
     health: analysis.health,
@@ -89,7 +142,7 @@ export async function draftSprintReview(projectKey, spaceKey) {
     projectKey,
     generatedAt: new Date().toISOString(),
   });
-  const page = await createPage(spaceKey, title, html);
+  const page = await createReviewPage(spaceKey, title, html, createPageFn);
   return {
     page,
     projectKey,

@@ -141,6 +141,47 @@ affidavit + W-8BEN tax form + bank details within 10 business days.
   scout --public --source=. --push` (or create + push the existing
   local main branch).
 
+- Step 5 DONE 2026-11-18 ~03:31 WIB (Eki's order "kerjain aja langsung"):
+  production deploy v2.0.0 (first production deploy; numbering separate
+  from dev 3.1.0) + Distribution "Sharing with anyone" (public, NOT
+  org-only) with app details (Company eqiverse, support = GitHub repo URL,
+  privacy policy = repo PRIVACY.md, Terms blank, personal-data "No").
+  Installation link saved in docs/INSTALL-LINK.md + DEVPOST-DRAFT.md.
+  Public repo arefki/sprint-scout created via browser (API create failed
+  403 — App cannot create repos; gh CLI not authed) and pushed via the
+  GitHub connector snapshot push (23 files incl. PRIVACY.md, commit
+  aa4933a4, blob SHAs verified identical; provider added an "Initial
+  commit" 7e29938e first). App installation on the repo needed Eki's tap
+  on the install link (done 03:29 WIB). Category "Apps for Software
+  Teams" lives only on Devpost — no Category field exists in the console.
+  NEXT: Step 6 demo video (stale/nudge segments need 3-day-old issues,
+  i.e. Nov 20+, or staleDays=1 on Nov 19), then Step 7 Devpost submit.
+
+- Fix v3.2.0 deployed 2026-11-18 ~03:52 WIB (duplicate-title bug, found
+  during the Step 6 demo recording): a second review draft on the same UTC
+  day ALWAYS failed — draftSprintReview built a fixed title ("Sprint review
+  — Sprint 12 — 2026-11-17") and the Rovo agent's title suggestions were
+  never passed through, so all 6 attempts in the demo session hit the same
+  existing page (forge logs 20:37–20:45Z, six identical Confluence 400
+  "A page with this title already exists"). Fix: draftSprintReview now
+  takes an optional title override (Rovo `title` input — NEW optional
+  input on the sprint-review-draft action in manifest.yml — threaded
+  through src/index.js; dashboard resolver passes req.payload.title too;
+  prompt.md tells the agent it may suggest a title) and createReviewPage
+  retries collisions with numbered suffixes " (2)" … " (5)" (max 5
+  attempts, then a clear error naming the collision). Only the exact
+  duplicate-title 400 retries — 403/500 errors throw immediately.
+  Tests **31/31** (20 existing + 11 new in test/service.test.js, mocked
+  createPage, no live calls), lint clean (offline + forge lint in deploy).
+  Deployed to development as **3.2.0** (2026-11-17T20:52:05Z, Success);
+  production stays 2.0.0 until the fix is verified live. No new errors in
+  forge logs after the deploy (the six 400s above are pre-fix). STILL TO
+  VERIFY LIVE: ask Rovo for a second draft on the demo site — it must now
+  create "… — 2026-11-17 (2)" (or today's date) with the CORRECT blocked
+  direction (DEMO-5 blocked by DEMO-10); the existing page 3440642 is
+  stale (created pre-v3.1.0 with the inverted blocked list). Then re-do
+  the Step 6 draft-review video segment.
+
 ## 1. Accounts (one-time, ~20 min)
 
 - [ ] **Atlassian account** (free): sign up at id.atlassian.com with

@@ -126,6 +126,11 @@ modules:
           type: string
           required: true
           description: The key of the Confluence space where the review page will be created, for example TEAM.
+        title:
+          title: Page title
+          type: string
+          required: false
+          description: Title for the review page. Leave empty for the default "Sprint review — <sprint> — <date>". If a page with the title already exists, the app retries with a numbered suffix (2), (3), … automatically.
 
     - key: nudge-stale
       name: Nudge stale issues

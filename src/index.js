@@ -164,7 +164,7 @@ export async function sprintReviewDraft(payload) {
   const spaceKey = String(payload?.spaceKey || "").trim().toUpperCase();
   if (!spaceKey) return { error: "Which Confluence space? Give me a space key such as TEAM." };
   try {
-    const result = await draftSprintReview(resolved.projectKey, spaceKey);
+    const result = await draftSprintReview(resolved.projectKey, spaceKey, { title: payload?.title });
     log("sprint-review-draft", { ms: Date.now() - t0, project: resolved.projectKey, page: result.page.id });
     return {
       created: true,

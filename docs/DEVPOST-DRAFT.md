@@ -117,7 +117,9 @@ One Forge app, all Atlassian-native — no external services, no paid APIs.
 
 ## Installation link
 
-[PASTE the production installation link from the developer console — Distribution → Sharing]
+https://developer.atlassian.com/console/install/a7e3c905-c264-4d1d-a1f2-8b97a832227c?signature=AYABeJQhiEBvOx8qWY3HYIHmUTUAAAADAAdhd3Mta21zAEthcm46YXdzOmttczp1cy13ZXN0LTI6NzA5NTg3ODM1MjQzOmtleS83MDVlZDY3MC1mNTdjLTQxYjUtOWY5Yi1lM2YyZGNjMTQ2ZTcAuAECAQB4CxqLTo9l4lqXuFjNim1xJM%2Bp%2F3TVP9xHS2BrU5DRRucB6tzAForNLe9lcooabxR%2BtAAAAH4wfAYJKoZIhvcNAQcGoG8wbQIBADBoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDHePYWnqecaTrAe7eAIBEIA7jwLMe8OgeMxB8g6KaPlMxARgE22KklNqC2nUPF6ZbMp4f9cxXcidaQxUdQ9k1Zo01f%2FIEub%2FXzNNRiEAB2F3cy1rbXMAS2Fybjphd3M6a21zOmV1LXdlc3QtMTo3MDk1ODc4MzUyNDM6a2V5LzQ2MzBjZTZiLTAwYzMtNGRlMi04NzdiLTYyN2UyMDYwZTVjYwC4AQICAHi9bVMAkme4qVQX1fQHo6ePw3H40A7cGfz7yrmSfBWMXgHqwrMEqUaCvU2dmO4oTTEMAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMxkvwWPOvToiaZ3mrAgEQgDuI%2BLdjI6donL19Cb0r9YlOF9p94Qe%2BEm1eaAktZpklt4o84T1WAVwmBkbYGEoBBTmx9SzXWGNQppUJOAAHYXdzLWttcwBLYXJuOmF3czprbXM6dXMtZWFzdC0xOjcwOTU4NzgzNTI0MzprZXkvNmMxMjBiYTAtNGNkNS00OTg1LWI4MmUtNDBhMDQ5NTJjYzU3ALgBAgIAeDYASx0XCjkny4iLV6vz%2BKtEGSGT6kdt0QRpkn6D%2FlVEAfAdjX%2BQWK9nsghDu2IgK%2FsAAAB%2BMHwGCSqGSIb3DQEHBqBvMG0CAQAwaAYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAzZ%2FnXJ4H8SYJw8nTwCARCAOxXK75hp8U8EHUjQddL9IiVBknq9sHJSIb5iGOit9%2FFek3umycjwwTkBGiZdzVvBLzDZt%2FZHc1DpNILuAgAAAAAMAAAQAAAAAAAAAAAAAAAAAPm6vNSoF644RbVvIHK8u%2Bj%2F%2F%2F%2F%2FAAAAAQAAAAAAAAAAAAAAAQAAADI4fFSgS9Ofx9KYnco4UIsQPh2sZkCI9Kq7TQhQS3q3fTEO9MHrVo6H%2F%2F3%2BVarmBJX%2F72M3wsU%2FUIltBxP6Zd0Noso%3D&product=jira
+
+(Obtained 2026-11-18 ~03:31 WIB; also saved in docs/INSTALL-LINK.md.)
 
 ## Demo video
 
@@ -125,7 +127,7 @@ One Forge app, all Atlassian-native — no external services, no paid APIs.
 
 ## Repository
 
-[PASTE the public repo URL, e.g. https://github.com/arefki/sprint-scout]
+https://github.com/arefki/sprint-scout (public; pushed 2026-11-18 ~03:30 WIB, 23 files, commit aa4933a4)
 
 ## Setup steps for judges
 
@@ -154,6 +156,6 @@ Forge, Rovo, Atlassian MCP, Teamwork Graph API, Jira, Confluence, UI Kit
 
 ## Try it out links
 
-- Installation link: [PASTE]
-- Demo video: [PASTE]
-- Source code: [PASTE]
+- Installation link: [see Installation link section above]
+- Demo video: [PASTE — pending Step 6]
+- Source code: https://github.com/arefki/sprint-scout

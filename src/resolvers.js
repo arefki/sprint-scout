@@ -75,7 +75,7 @@ export const handler = makeResolver({
     if (!projectKey) return { error: "Set a project key first." };
     if (!spaceKey) return { error: "Set a Confluence space key first." };
     try {
-      const result = await draftSprintReview(projectKey, spaceKey);
+      const result = await draftSprintReview(projectKey, spaceKey, { title: req.payload?.title });
       return { ok: true, pageTitle: result.page.title, pageUrl: result.page.url, counts: result.counts };
     } catch (e) {
       return { error: `Could not create the review page: ${String(e.message).slice(0, 200)}` };
