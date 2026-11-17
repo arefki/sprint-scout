@@ -1,0 +1,226 @@
+# Sprint Scout — Forge app manifest (Codegeist 2026)
+#
+# WHAT THIS APP IS
+# A Rovo agent + Jira UI that keeps sprints healthy: it spots stale and blocked
+# work, shows who on the team is overloaded (via the Teamwork Graph), and drafts
+# sprint-review notes as a Confluence page. The same read actions are exposed as
+# MCP tools so other agents can call them.
+#
+# APP ID — READ THIS BEFORE DEPLOYING
+# The `app.id` below is a PLACEHOLDER. The real id is created by `forge create`
+# (which needs an Atlassian login, so it is a parent/browser step, not part of
+# this repo). Two ways to get a real id:
+#   1. Run `forge create` in an empty folder, then copy this repo's files over
+#      it, KEEPING the generated manifest's `app.id` line.
+#   2. Or replace the id below with the id of an app created in the developer
+#      console (developer.atlassian.com/console).
+# `forge lint` accepts the placeholder format; `forge deploy` will NOT work
+# with it.
+#
+# MODULES AT A GLANCE
+#   rovo:agent      "Sprint Scout" — 6 actions (4 read, 2 write)
+#   rovo:mcp        "Sprint Scout MCP" — the 4 read actions as MCP tools
+#   jira:globalPage "Sprint Scout" dashboard (UI Kit)
+#   jira:issuePanel "Sprint Scout" insight panel on every issue (UI Kit)
+
+modules:
+  rovo:agent:
+    - key: sprint-scout
+      name: Sprint Scout
+      description: Keeps your sprint healthy. Spots stale and blocked work, shows who is overloaded, and drafts sprint reviews in Confluence.
+      prompt: resource:agent-prompt;prompt.md
+      conversationStarters:
+        - How healthy is our current sprint?
+        - What's blocked right now?
+        - Who on my team is overloaded?
+        - Draft our sprint review notes
+      actions:
+        - sprint-health
+        - stale-issues
+        - blocked-issues
+        - team-workload
+        - sprint-review-draft
+        - nudge-stale
+
+  rovo:mcp:
+    - key: sprint-scout-mcp
+      name: Sprint Scout MCP
+      tools:
+        - sprint-health
+        - stale-issues
+        - blocked-issues
+        - team-workload
+
+  action:
+    - key: sprint-health
+      name: Sprint health
+      function: sprintHealth
+      actionVerb: GET
+      description: |
+        Summarises the active sprint's health: done, in progress and to-do counts, completion %, days left, and stale/blocked counts. Use for 'how is our sprint going' or 'are we on track'. Leave projectKey empty to use the on-screen project.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: false
+          description: The Jira project key, for example PROJ. Leave empty to use the project of the work item on screen.
+
+    - key: stale-issues
+      name: Stale issues
+      function: staleIssues
+      actionVerb: GET
+      description: |
+        Lists active-sprint work items not updated for N days (default 3), with assignee, status and days since update. Use for 'what went stale' or 'which issues are stuck'. Leave projectKey empty to use the on-screen project.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: false
+          description: The Jira project key, for example PROJ. Leave empty to use the project of the work item on screen.
+        days:
+          title: Stale after (days)
+          type: number
+          required: false
+          description: An issue counts as stale when it has not been updated for this many days. Default 3.
+
+    - key: blocked-issues
+      name: Blocked issues
+      function: blockedIssues
+      actionVerb: GET
+      description: |
+        Lists active-sprint work items blocked by other items ('is blocked by' links), with the blocking keys. Use for 'what's blocked' or 'show blockers'. Leave projectKey empty to use the on-screen project.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: false
+          description: The Jira project key, for example PROJ. Leave empty to use the project of the work item on screen.
+
+    - key: team-workload
+      name: Team workload
+      function: teamWorkload
+      actionVerb: GET
+      description: |
+        For an Atlassian team, lists members and their current assignments and flags who is overloaded (Teamwork Graph). Use for 'who is overloaded' or 'who has too much on'. Leave team empty for the asker's first team.
+      inputs:
+        team:
+          title: Team name
+          type: string
+          required: false
+          description: The team's name, or part of it. Leave empty for the team of the user who is asking.
+
+    - key: sprint-review-draft
+      name: Draft sprint review
+      function: sprintReviewDraft
+      actionVerb: CREATE
+      description: |
+        Creates a Confluence page with a sprint-review draft: what shipped, what is open, stale/blocked work and workload hotspots. Only call after the user confirms, then share the page URL. Leave projectKey empty for the on-screen project.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: false
+          description: The Jira project key, for example PROJ. Leave empty to use the project of the work item on screen.
+        spaceKey:
+          title: Confluence space key
+          type: string
+          required: true
+          description: The key of the Confluence space where the review page will be created, for example TEAM.
+
+    - key: nudge-stale
+      name: Nudge stale issues
+      function: nudgeStale
+      actionVerb: CREATE
+      description: |
+        Posts a short, polite status-request comment on each stale work item in the active sprint. Only call after the user confirms, then report which issues were nudged. Leave projectKey empty for the on-screen project.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: false
+          description: The Jira project key, for example PROJ. Leave empty to use the project of the work item on screen.
+        days:
+          title: Stale after (days)
+          type: number
+          required: false
+          description: An issue counts as stale when it has not been updated for this many days. Default 3.
+        maxIssues:
+          title: Maximum issues to nudge
+          type: number
+          required: false
+          description: Nudge at most this many stale issues, stalest first. Default 5.
+
+  jira:globalPage:
+    - key: sprint-scout-page
+      resource: ui/global
+      resolver:
+        function: resolver
+      render: native
+      title: Sprint Scout
+
+  jira:issuePanel:
+    - key: sprint-scout-panel
+      resource: ui/panel
+      resolver:
+        function: resolver
+      render: native
+      title: Sprint Scout
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+
+  function:
+    - key: resolver
+      handler: resolvers.handler
+    - key: sprintHealth
+      handler: index.sprintHealth
+    - key: staleIssues
+      handler: index.staleIssues
+    - key: blockedIssues
+      handler: index.blockedIssues
+    - key: teamWorkload
+      handler: index.teamWorkload
+    - key: sprintReviewDraft
+      handler: index.sprintReviewDraft
+    - key: nudgeStale
+      handler: index.nudgeStale
+
+resources:
+  - key: ui
+    path: src/frontend
+    entry:
+      global: index.jsx
+      panel: issue-panel.jsx
+  - key: agent-prompt
+    path: prompts
+
+permissions:
+  scopes:
+    # Jira: read issues/users, write comments (nudges)
+    - read:jira-work
+    - read:jira-user
+    - write:jira-work
+    # Jira Software: boards + active sprint (Agile REST API)
+    - read:board-scope:jira-software
+    - read:sprint:jira-software
+    # Confluence: create sprint-review pages via the v2 API (POST
+    # /wiki/api/v2/pages). The v1 /rest/api/content POST is REMOVED for
+    # Forge OAuth tokens — 410 GoneException "This deprecated endpoint has
+    # been removed" (verified 2026-11-17; v1 still answers Basic auth).
+    # write:confluence-content is kept for compatibility; the v2 calls use
+    # the granular scopes below.
+    - write:confluence-content
+    - write:page:confluence
+    - read:space:confluence
+    # Forge storage: dashboard settings (one record per installation)
+    - storage:app
+    # Teamwork Graph: team workload (one scope per object type the queries touch)
+    - read:graph:issue:jira
+    - read:graph:issue-status:jira
+    - read:graph:issue-comment:jira
+    - read:graph:user:atlassian
+    - read:graph:team:atlassian
+
+app:
+  runtime:
+    name: nodejs22.x
+  # Real id from `forge create` (Developer Space "eqiverse", 2026-11-17).
+  id: ari:cloud:ecosystem::app/a7e3c905-c264-4d1d-a1f2-8b97a832227c
