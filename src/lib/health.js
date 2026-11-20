@@ -176,7 +176,7 @@ function issueLink(key, webUrl, summary) {
   return webUrl ? `<a href="${escapeHtml(webUrl)}">${label}</a>` : label;
 }
 
-export function buildReviewHtml({ sprint, health, stale, blocked, workload, projectKey, generatedAt }) {
+export function buildReviewHtml({ sprint, health, stale, blocked, workload, projectKey, generatedAt, staleDays = 3 }) {
   const sprintName = sprint?.name || `Open work in ${projectKey}`;
   const date = new Date(generatedAt).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -185,6 +185,10 @@ export function buildReviewHtml({ sprint, health, stale, blocked, workload, proj
   });
   const daysLeftText =
     health.daysLeft === null ? "no end date set" : health.daysLeft <= 0 ? "ends today" : `${health.daysLeft} day(s) left`;
+  // The intro must match the effective threshold, not a hardcoded 3: with
+  // "Stale after (days)" saved as 1, the listed issues are only 1+ days idle
+  // (found live 2026-11-20 — the heading count was right, the text was not).
+  const staleIntro = `Not updated in ${staleDays}+ day${staleDays === 1 ? "" : "s"} and still open:`;
 
   return [
     `<h1>Sprint review — ${escapeHtml(sprintName)}</h1>`,
@@ -194,7 +198,7 @@ export function buildReviewHtml({ sprint, health, stale, blocked, workload, proj
       `${health.inProgress} in progress, ${health.todo} to do. Sprint ${escapeHtml(daysLeftText)}. ` +
       `Signal: <strong>${escapeHtml(health.risk)}</strong> — ${escapeHtml(health.riskReason)}</p>`,
     `<h2>Stale work (${stale.length})</h2>`,
-    `<p>Not updated in 3+ days and still open:</p>`,
+    `<p>${staleIntro}</p>`,
     reviewTable(
       ["Work item", "Status", "Assignee", "Idle"],
       stale.map((s) => [

@@ -123,7 +123,7 @@ https://developer.atlassian.com/console/install/a7e3c905-c264-4d1d-a1f2-8b97a832
 
 ## Demo video
 
-[PASTE the public YouTube URL — under 5 minutes]
+https://www.youtube.com/watch?v=cd5jhoPpO38 (uploaded 2026-11-20 ~00:29 WIB, public, channel "eqiverse" — created from the eqiverse Google account, which had no YouTube channel yet; 4:27, 1920x1080)
 
 ## Repository
 
@@ -157,5 +157,5 @@ Forge, Rovo, Atlassian MCP, Teamwork Graph API, Jira, Confluence, UI Kit
 ## Try it out links
 
 - Installation link: [see Installation link section above]
-- Demo video: [PASTE — pending Step 6]
+- Demo video: https://www.youtube.com/watch?v=cd5jhoPpO38
 - Source code: https://github.com/arefki/sprint-scout

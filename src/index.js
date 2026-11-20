@@ -67,6 +67,7 @@ export async function sprintHealth(payload) {
       sprint: a.sprint,
       board: a.board,
       health: a.health,
+      staleDays: a.staleDays,
       staleCount: a.stale.length,
       blockedCount: a.blocked.length,
       overloadedCount: a.workload.overloaded.length,
@@ -87,7 +88,7 @@ export async function staleIssues(payload) {
     return {
       project: resolved.projectKey,
       sprint: a.sprint?.name || null,
-      staleDays: payload?.days || 3,
+      staleDays: a.staleDays,
       stale: a.stale.slice(0, 25),
       totalStale: a.stale.length,
       notes: a.notes,
@@ -172,6 +173,7 @@ export async function sprintReviewDraft(payload) {
       pageUrl: result.page.url,
       project: result.projectKey,
       sprint: result.sprint,
+      staleDays: result.staleDays,
       counts: result.counts,
       notes: result.notes,
     };
@@ -195,6 +197,7 @@ export async function nudgeStale(payload) {
     return {
       project: result.projectKey,
       sprint: result.sprint,
+      staleDays: result.staleDays,
       staleFound: result.staleFound,
       nudged: result.nudged,
       skipped: result.skipped,

@@ -9,6 +9,7 @@
 // the agent can say "this may be incomplete" instead of inventing an answer.
 
 import { buildNudgeAdf, buildReviewHtml, computeHealth, findBlocked, findStale, workloadFromIssues } from "./lib/health.js";
+import { resolveStaleDays } from "./lib/config.js";
 import { clampInt } from "./lib/util.js";
 import { addComment, getActiveSprint, getIssue, getOpenIssues, getSprintIssues } from "./jira.js";
 import { createPage } from "./confluence.js";
@@ -51,8 +52,13 @@ export async function loadSprintWork(projectKey) {
 }
 
 // Full analysis for one project: health + stale + blocked + workload.
-export async function analyseSprint(projectKey, staleDays = DEFAULT_STALE_DAYS, overloadAt = DEFAULT_OVERLOAD_AT) {
-  const days = clampInt(staleDays, DEFAULT_STALE_DAYS, 1, 90);
+// `staleDays` is the threshold: an explicit value wins, otherwise the saved
+// "Stale after (days)" setting from Forge storage, otherwise the 3-day
+// default (see src/lib/config.js — the v3.2.0 bug was that callers without an
+// explicit value always got 3, even when the dashboard had 1 saved).
+// `getConfigFn` is a test seam for the storage read.
+export async function analyseSprint(projectKey, staleDays = undefined, overloadAt = DEFAULT_OVERLOAD_AT, getConfigFn) {
+  const days = await resolveStaleDays(staleDays, DEFAULT_STALE_DAYS, getConfigFn);
   const work = await loadSprintWork(projectKey);
   const health = computeHealth(work.sprint, work.issues);
   const stale = findStale(work.issues, days);
@@ -73,6 +79,7 @@ export async function analyseSprint(projectKey, staleDays = DEFAULT_STALE_DAYS, 
       : null,
     board: work.board,
     health,
+    staleDays: days,
     stale,
     blocked,
     workload,
@@ -125,12 +132,16 @@ export async function createReviewPage(spaceKey, baseTitle, html, createPageFn =
 
 // Build the review page body + title, then create it in Confluence.
 // `options.title` overrides the generated title (from the Rovo action's
-// `title` input or the dashboard). `options.createPageFn` /
-// `options.analyseFn` are test seams — production callers leave them out.
+// `title` input or the dashboard). The stale threshold is resolved the same
+// way as everywhere else — saved setting first, 3-day default otherwise — so
+// the draft can never disagree with the dashboard (the v3.2.0 bug).
+// `options.createPageFn` / `options.analyseFn` / `options.getConfigFn` are
+// test seams — production callers leave them out.
 export async function draftSprintReview(projectKey, spaceKey, options = {}) {
   const analyseFn = options.analyseFn || analyseSprint;
   const createPageFn = options.createPageFn || createPage;
-  const analysis = await analyseFn(projectKey);
+  const days = await resolveStaleDays(options.staleDays, DEFAULT_STALE_DAYS, options.getConfigFn);
+  const analysis = await analyseFn(projectKey, days);
   const sprintName = analysis.sprint?.name || `Open work in ${projectKey}`;
   const title = buildReviewTitle(sprintName, options.title);
   const html = buildReviewHtml({
@@ -141,12 +152,14 @@ export async function draftSprintReview(projectKey, spaceKey, options = {}) {
     workload: analysis.workload,
     projectKey,
     generatedAt: new Date().toISOString(),
+    staleDays: days,
   });
   const page = await createReviewPage(spaceKey, title, html, createPageFn);
   return {
     page,
     projectKey,
     sprint: analysis.sprint?.name || null,
+    staleDays: days,
     counts: {
       total: analysis.health.total,
       done: analysis.health.done,
@@ -177,9 +190,11 @@ export async function nudgeIssue(issueKey, daysStale) {
   return { key: issueKey, nudged: true, assignee: f.assignee.displayName };
 }
 
-// Nudge the stalest issues in a project, up to `maxIssues`.
-export async function nudgeStaleIssues(projectKey, staleDays = DEFAULT_STALE_DAYS, maxIssues = MAX_NUDGE_ISSUES) {
-  const days = clampInt(staleDays, DEFAULT_STALE_DAYS, 1, 90);
+// Nudge the stalest issues in a project, up to `maxIssues`. The threshold
+// resolves like everywhere else (explicit value, else saved setting, else
+// the 3-day default). `getConfigFn` is a test seam for the storage read.
+export async function nudgeStaleIssues(projectKey, staleDays = undefined, maxIssues = MAX_NUDGE_ISSUES, getConfigFn) {
+  const days = await resolveStaleDays(staleDays, DEFAULT_STALE_DAYS, getConfigFn);
   const max = clampInt(maxIssues, MAX_NUDGE_ISSUES, 1, 10);
   const analysis = await analyseSprint(projectKey, days);
   const targets = analysis.stale.slice(0, max);
@@ -196,6 +211,7 @@ export async function nudgeStaleIssues(projectKey, staleDays = DEFAULT_STALE_DAY
   return {
     projectKey,
     sprint: analysis.sprint?.name || null,
+    staleDays: days,
     staleFound: analysis.stale.length,
     nudged,
     skipped,

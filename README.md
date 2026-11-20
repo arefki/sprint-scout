@@ -162,11 +162,18 @@ Full step-by-step for the human/browser steps:
   operation-name rule are as documented in Oct–Nov 2026; check the
   [Teamwork Graph changelog](https://developer.atlassian.com/platform/forge/teamwork-graph/)
   before relying on them long-term.
-- **Not yet live-tested end-to-end.** The code is linted and unit-tested, but
-  it has not been deployed to a real Jira site yet — the first deploy is the
-  moment of truth (see the checklist for a smoke-test plan). The Teamwork
-  Graph client follows patterns verified on a live site in Oct 2026
-  (see "References" below).
+- **One stale threshold, everywhere.** The "Stale after (days)" setting saved
+  on the dashboard (Forge storage, key `scout-config`) is the single source
+  of truth: Rovo actions, the review draft and the nudge action all read it,
+  falling back to 3 days when nothing is saved. (Fixed in v3.3.0: Rovo and the
+  draft previously used a hardcoded 3 days and ignored the saved setting, so
+  they disagreed with the dashboard — found during the demo-video capture,
+  2026-11-19.)
+- **Live-tested end-to-end.** Deployed to real Jira/Confluence sites
+  (Nov 2026): dashboard, issue panel, Rovo agent, review drafts and nudges
+  all verified live on the demo site. (The v3.3.0 threshold fix itself is
+  unit-tested and dev-deployed; the live agent-vs-dashboard agreement check
+  runs once demo data ages past 24h idle, ~21 Nov 2026.)
 
 ## References
 

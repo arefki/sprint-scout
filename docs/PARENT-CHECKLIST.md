@@ -154,8 +154,24 @@ affidavit + W-8BEN tax form + bank details within 10 business days.
   commit" 7e29938e first). App installation on the repo needed Eki's tap
   on the install link (done 03:29 WIB). Category "Apps for Software
   Teams" lives only on Devpost — no Category field exists in the console.
-  NEXT: Step 6 demo video (stale/nudge segments need 3-day-old issues,
-  i.e. Nov 20+, or staleDays=1 on Nov 19), then Step 7 Devpost submit.
+  BUG FIX v3.2.0 (dev) / v2.1.0 (production) 2026-11-18 ~03:53 WIB:
+  draft review failed with 400 "title already exists" on any 2nd draft
+  the same UTC day (fixed daily title; agent's title ignored). Fix:
+  duplicate titles auto-suffixed " (2)"…" (5)" + optional title override
+  threaded through Rovo action + resolver + manifest; 31/31 tests pass.
+  VERIFIED LIVE 03:54 WIB: Rovo created "Sprint review — Sprint 12 —
+  2026-11-17 (2)" (page 3702785) with the CORRECT blocked direction
+  (DEMO-5 blocked by DEMO-10). Production redeployed v2.1.0; repo
+  re-pushed (25 files, commit ffa7aa18). Demo-site link direction
+  verified via API: DEMO-5 outwardIssue DEMO-10 = DEMO-10 blocks
+  DEMO-5; old Confluence page 3440642 is stale (pre-fix, inverted).
+  VIDEO (Step 6): browser cannot record video or save screenshots as
+  files — Eki chose Remotion video from recreated visuals (real verified
+  content only) 03:54 WIB. Build delegated; stale/nudge segments need
+  real stale data (issues 1 day old ~23:30 WIB Nov 18 at staleDays=1,
+  or Nov 20 at default 3 days) — placeholders until then.
+  NEXT: Step 6 video (draft render, then stale fill + final + YouTube
+  Public upload), then Step 7 Devpost submit.
 
 - Fix v3.2.0 deployed 2026-11-18 ~03:52 WIB (duplicate-title bug, found
   during the Step 6 demo recording): a second review draft on the same UTC

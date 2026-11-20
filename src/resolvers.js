@@ -20,14 +20,11 @@
 import { makeResolver } from "@forge/resolver";
 import { kvs } from "@forge/kvs";
 
+import { CONFIG_KEY, DEFAULT_CONFIG } from "./lib/config.js";
 import { daysSince, isDoneStatus } from "./lib/util.js";
 import { findBlocked } from "./lib/health.js";
 import { analyseSprint, draftSprintReview, nudgeIssue } from "./service.js";
 import { getIssue, personName } from "./jira.js";
-
-const CONFIG_KEY = "scout-config";
-
-const DEFAULT_CONFIG = { projectKey: "", spaceKey: "", staleDays: 3 };
 
 export const handler = makeResolver({
   getConfig: async () => {

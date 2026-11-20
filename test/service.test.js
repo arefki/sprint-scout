@@ -175,3 +175,92 @@ test("draftSprintReview retries a duplicate default title with a suffix", async 
   assert.equal(result.page.title, `Sprint review — Sprint 12 — ${today} (2)`);
   assert.equal(calls.length, 2);
 });
+
+// --- stale-threshold resolution (v3.2.0 bug) -------------------------------
+// The draft used to call analyseFn(projectKey) with no threshold, so the
+// analysis always ran at the 3-day default even when the dashboard had a
+// different setting saved. The draft must now pass the resolved threshold.
+
+test("draftSprintReview passes the saved 1-day threshold to the analysis", async () => {
+  const seen = [];
+  const analyseFn = async (projectKey, staleDays) => {
+    seen.push([projectKey, staleDays]);
+    return fakeAnalysis();
+  };
+  const stub = async (spaceKey, title) => ({ id: "9", title, url: "https://x/wiki/9" });
+  const result = await draftSprintReview("DEMO", "TEAM", {
+    analyseFn,
+    createPageFn: stub,
+    getConfigFn: async () => ({ staleDays: 1 }),
+  });
+  assert.deepEqual(seen, [["DEMO", 1]]);
+  assert.equal(result.staleDays, 1);
+});
+
+test("draftSprintReview falls back to the 3-day default when nothing is saved", async () => {
+  const seen = [];
+  const analyseFn = async (projectKey, staleDays) => {
+    seen.push([projectKey, staleDays]);
+    return fakeAnalysis();
+  };
+  const stub = async (spaceKey, title) => ({ id: "9", title, url: "https://x/wiki/9" });
+  const result = await draftSprintReview("DEMO", "TEAM", {
+    analyseFn,
+    createPageFn: stub,
+    getConfigFn: async () => null,
+  });
+  assert.deepEqual(seen, [["DEMO", 3]]);
+  assert.equal(result.staleDays, 3);
+});
+
+test("draftSprintReview honours an explicit staleDays option over the saved setting", async () => {
+  const seen = [];
+  const analyseFn = async (projectKey, staleDays) => {
+    seen.push([projectKey, staleDays]);
+    return fakeAnalysis();
+  };
+  const stub = async (spaceKey, title) => ({ id: "9", title, url: "https://x/wiki/9" });
+  const result = await draftSprintReview("DEMO", "TEAM", {
+    staleDays: 7,
+    analyseFn,
+    createPageFn: stub,
+    getConfigFn: async () => ({ staleDays: 1 }),
+  });
+  assert.deepEqual(seen, [["DEMO", 7]]);
+  assert.equal(result.staleDays, 7);
+});
+
+// --- draft HTML follows the effective threshold -----------------------------
+// The intro line under "Stale work (N)" used to hardcode "3+ days" even when
+// the analysis ran at a different threshold (found live 2026-11-20).
+
+test("draftSprintReview draft HTML says '1+ day' when the saved setting is 1", async () => {
+  const seenHtml = [];
+  const stub = async (spaceKey, title, html) => {
+    seenHtml.push(html);
+    return { id: "9", title, url: "https://x/wiki/9" };
+  };
+  await draftSprintReview("DEMO", "TEAM", {
+    analyseFn: async () => fakeAnalysis(),
+    createPageFn: stub,
+    getConfigFn: async () => ({ staleDays: 1 }),
+  });
+  assert.equal(seenHtml.length, 1);
+  assert.match(seenHtml[0], /Not updated in 1\+ day and still open:/);
+  assert.doesNotMatch(seenHtml[0], /3\+ days/);
+});
+
+test("draftSprintReview draft HTML says '3+ days' when nothing is saved", async () => {
+  const seenHtml = [];
+  const stub = async (spaceKey, title, html) => {
+    seenHtml.push(html);
+    return { id: "9", title, url: "https://x/wiki/9" };
+  };
+  await draftSprintReview("DEMO", "TEAM", {
+    analyseFn: async () => fakeAnalysis(),
+    createPageFn: stub,
+    getConfigFn: async () => null,
+  });
+  assert.equal(seenHtml.length, 1);
+  assert.match(seenHtml[0], /Not updated in 3\+ days and still open:/);
+});

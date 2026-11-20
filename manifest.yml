@@ -70,7 +70,7 @@ modules:
       function: staleIssues
       actionVerb: GET
       description: |
-        Lists active-sprint work items not updated for N days (default 3), with assignee, status and days since update. Use for 'what went stale' or 'which issues are stuck'. Leave projectKey empty to use the on-screen project.
+        Lists active-sprint work items not updated for N days (saved dashboard threshold, 3 days by default), with assignee, status and days since update. Use for 'what went stale' or 'which issues are stuck'.
       inputs:
         projectKey:
           title: Project key
@@ -81,7 +81,7 @@ modules:
           title: Stale after (days)
           type: number
           required: false
-          description: An issue counts as stale when it has not been updated for this many days. Default 3.
+          description: An issue counts as stale when it has not been updated for this many days. Leave empty to use the saved dashboard setting (3 days if none is saved).
 
     - key: blocked-issues
       name: Blocked issues
@@ -148,7 +148,7 @@ modules:
           title: Stale after (days)
           type: number
           required: false
-          description: An issue counts as stale when it has not been updated for this many days. Default 3.
+          description: An issue counts as stale when it has not been updated for this many days. Leave empty to use the saved dashboard setting (3 days if none is saved).
         maxIssues:
           title: Maximum issues to nudge
           type: number

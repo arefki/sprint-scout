@@ -247,6 +247,51 @@ test("buildReviewHtml escapes user-controlled text", () => {
   assert.match(html, /&lt;script&gt;/);
 });
 
+// The stale-work intro must follow the effective threshold (found live
+// 2026-11-20: with "Stale after (days)" saved as 1, the draft said "3+
+// days" while listing issues only 1 day idle). Singular "day" for 1.
+test("buildReviewHtml stale intro uses a 1-day threshold (singular)", () => {
+  const html = buildReviewHtml({
+    sprint: { name: "Sprint 12" },
+    health: { donePct: 60, done: 6, total: 10, inProgress: 2, todo: 2, daysLeft: 3, risk: "watch", riskReason: "a bit behind" },
+    stale: [{ key: "P-1", summary: "Old thing", status: "In Progress", assignee: "Ana", daysStale: 1, webUrl: "https://x/browse/P-1" }],
+    blocked: [],
+    workload: { overloaded: [], unassignedOpen: 0 },
+    projectKey: "PROJ",
+    generatedAt: NOW.toISOString(),
+    staleDays: 1,
+  });
+  assert.match(html, /Not updated in 1\+ day and still open:/);
+  assert.doesNotMatch(html, /3\+ days/);
+});
+
+test("buildReviewHtml stale intro uses a 3-day threshold (plural)", () => {
+  const html = buildReviewHtml({
+    sprint: { name: "Sprint 12" },
+    health: { donePct: 60, done: 6, total: 10, inProgress: 2, todo: 2, daysLeft: 3, risk: "watch", riskReason: "a bit behind" },
+    stale: [{ key: "P-1", summary: "Old thing", status: "In Progress", assignee: "Ana", daysStale: 5, webUrl: "https://x/browse/P-1" }],
+    blocked: [],
+    workload: { overloaded: [], unassignedOpen: 0 },
+    projectKey: "PROJ",
+    generatedAt: NOW.toISOString(),
+    staleDays: 3,
+  });
+  assert.match(html, /Not updated in 3\+ days and still open:/);
+});
+
+test("buildReviewHtml stale intro defaults to 3 days when no threshold is passed", () => {
+  const html = buildReviewHtml({
+    sprint: { name: "Sprint 12" },
+    health: { donePct: 60, done: 6, total: 10, inProgress: 2, todo: 2, daysLeft: 3, risk: "watch", riskReason: "a bit behind" },
+    stale: [],
+    blocked: [],
+    workload: { overloaded: [], unassignedOpen: 0 },
+    projectKey: "PROJ",
+    generatedAt: NOW.toISOString(),
+  });
+  assert.match(html, /Not updated in 3\+ days and still open:/);
+});
+
 // --- nudge ADF -------------------------------------------------------------
 
 test("buildNudgeAdf mentions the assignee and names the issue", () => {
